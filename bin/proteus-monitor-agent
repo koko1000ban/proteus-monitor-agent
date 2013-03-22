@@ -4,16 +4,18 @@
 # description: monitoring server resources
 
 PREFIX=/usr/local
-SERVER_PATH=${PREFIX}/proteus-monitor-agent
+AGENT_PATH=${PREFIX}/proteus-monitor-agent
+CONF_PATH=${AGENT_PATH}/etc/agent.conf
 NAME=proteus-monitor-agent
 KILL_COMMAND=/bin/kill
 ID_CMD=/usr/bin/id
-DAEMON_USER_ID=`${ID_CMD} -u daemon`
-PID=`ps -fu ${DAEMON_USER_ID} | grep ${SERVER_PATH}/agent.js | awk '{print $2}'`
+DAEMON_USER_ID=`${ID_CMD} -u deployer`
+PID=`ps -fu ${DAEMON_USER_ID} | grep ${AGENT_PATH}/agent.js | awk '{print $2}'`
+NODE_CMD=/usr/local/bin/node
 
 start() {
 	if [ -z ${PID} ]; then
-		sudo -u daemon node ${SERVER_PATH}/agent.js > /dev/null &
+		sudo -u deployer ${NODE_CMD} ${AGENT_PATH}/agent.js -c ${CONF_PATH} > /dev/null &
 	else
 		echo "agent process already exist. [pid: ${PID}]"
 	fi
