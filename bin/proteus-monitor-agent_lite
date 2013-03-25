@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# chkconfig: 345 80 20
+# description: monitoring server resources
+
+PREFIX=/home/deployer/src
+AGENT_PATH=${PREFIX}/proteus-monitor-agent
+CONF_PATH=${AGENT_PATH}/etc/agent.conf
+NAME=proteus-monitor-agent
+KILL_COMMAND=/bin/kill
+ID_CMD=/usr/bin/id
+DAEMON_USER_ID=`${ID_CMD} -u deployer`
+PID=`ps -fu ${DAEMON_USER_ID} | grep ${AGENT_PATH}/agent.js | awk '{print $2}'`
+NODE_CMD=${PREFIX}/node/bin/node
+
+start() {
+	if [ -z ${PID} ]; then
+		sudo -u deployer ${NODE_CMD} ${AGENT_PATH}/agent.js -c ${CONF_PATH} > /dev/null &
+	else
+		echo "agent process already exist. [pid: ${PID}]"
+	fi
+}
+
+stop() {
+	if [ -z ${PID} ]; then
+		echo "process not found."
+	else
+		echo ${PID}
+		${KILL_COMMAND} -TERM ${PID}
+	fi
+}
+
+case "$1" in
+	start)
+		echo -n "Starting $NAME: "
+		start
+		exit $?
+		;;
+	stop)
+		echo -n "Stopping $NAME: "
+		stop
+		exit $?
+		;;
+	restart)
+		echo -n "Restart $NAME: "
+		stop
+		sleep 1
+		start
+		exit $?
+		;;
+	*)
+		N=/etc/init.d/$NAME
+		echo "Usage: $N {start|stop|restart}" >&2
+		exit 1
+		;;
+esac
+
+exit 0
